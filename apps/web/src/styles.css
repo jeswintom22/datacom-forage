@@ -1,0 +1,4 @@
+body{background:#fff}
+textarea{font-family:inherit}
+input,textarea{padding:6px;margin:6px 0;border:1px solid #ccc;border-radius:4px}
+button{padding:8px 12px}

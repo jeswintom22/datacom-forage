@@ -2,11 +2,16 @@ from flask import Flask, request, jsonify, g
 import sqlite3
 import time
 from datetime import datetime
+import os
+from flask_jwt_extended import (
+    JWTManager, create_access_token, jwt_required, get_jwt
+)
 
-DB_PATH = "d:/projects/Forage/Datacom/apps/api/kudos.db"
-ADMIN_KEY = "admin-secret"
+DB_PATH = os.environ.get('KUDOS_DB_PATH', "d:/projects/Forage/Datacom/apps/api/kudos.db")
 
 app = Flask(__name__)
+app.config['JWT_SECRET_KEY'] = 'dev-jwt-secret'
+jwt = JWTManager(app)
 
 def get_db():
     db = getattr(g, '_database', None)
@@ -79,6 +84,20 @@ def find_user_by_email(email):
     cur.execute("SELECT * FROM users WHERE email = ?", (email,))
     return cur.fetchone()
 
+
+@app.route('/api/auth/login', methods=['POST'])
+def login():
+    payload = request.get_json() or {}
+    email = payload.get('email')
+    if not email:
+        return jsonify({'error': 'email required'}), 400
+    user = find_user_by_email(email)
+    if not user:
+        return jsonify({'error': 'user not found'}), 404
+    additional_claims = {'role': user['role']}
+    token = create_access_token(identity=str(user['id']), additional_claims=additional_claims)
+    return jsonify({'access_token': token, 'user': {'id': user['id'], 'display_name': user['display_name'], 'email': user['email'], 'role': user['role']}})
+
 @app.route('/api/kudos', methods=['GET'])
 def get_kudos():
     limit = int(request.args.get('limit', 50))
@@ -139,15 +158,14 @@ def create_kudos():
     return jsonify(dict(row)), 201
 
 # Admin moderation endpoints (protected by simple header key for MVP)
-def require_admin():
-    key = request.headers.get('X-Admin-Key')
-    if key != ADMIN_KEY:
-        return False
-    return True
+def require_admin_jwt():
+    claims = get_jwt()
+    return claims.get('role') == 'admin'
 
 @app.route('/api/admin/kudos/<int:kudos_id>/hide', methods=['PATCH'])
+@jwt_required()
 def hide_kudos(kudos_id):
-    if not require_admin():
+    if not require_admin_jwt():
         return jsonify({'error':'unauthorized'}), 403
     payload = request.get_json() or {}
     reason = payload.get('reason') or ''
@@ -161,8 +179,9 @@ def hide_kudos(kudos_id):
     return jsonify({'status':'hidden'})
 
 @app.route('/api/admin/kudos/<int:kudos_id>/delete', methods=['PATCH'])
+@jwt_required()
 def delete_kudos(kudos_id):
-    if not require_admin():
+    if not require_admin_jwt():
         return jsonify({'error':'unauthorized'}), 403
     payload = request.get_json() or {}
     reason = payload.get('reason') or ''
@@ -176,8 +195,9 @@ def delete_kudos(kudos_id):
     return jsonify({'status':'deleted'})
 
 @app.route('/api/admin/kudos/<int:kudos_id>/restore', methods=['PATCH'])
+@jwt_required()
 def restore_kudos(kudos_id):
-    if not require_admin():
+    if not require_admin_jwt():
         return jsonify({'error':'unauthorized'}), 403
     payload = request.get_json() or {}
     reason = payload.get('reason') or 'restored'

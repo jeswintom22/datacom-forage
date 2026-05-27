@@ -1,60 +1,12 @@
 <!doctype html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <title>Kudos MVP</title>
-  <style>
-    body{font-family: Arial, sans-serif; max-width:800px;margin:2rem auto}
-    textarea{width:100%;height:80px}
-    .card{border:1px solid #ddd;padding:12px;margin:8px 0;border-radius:6px}
-  </style>
-</head>
-<body>
-  <h1>Kudos MVP</h1>
-  <form id="kudosForm">
-    <label>Sender email: <input id="sender" required value="alice@example.com"/></label><br/>
-    <label>Recipient email: <input id="recipient" required value="carol@example.com"/></label><br/>
-    <label>Message:</label>
-    <textarea id="message" maxlength="500">Great work!</textarea><br/>
-    <button type="submit">Send Kudos</button>
-  </form>
-
-  <h2>Recent Kudos</h2>
-  <div id="feed"></div>
-
-<script>
-const apiBase = 'http://127.0.0.1:5000/api'
-async function loadFeed(){
-  const res = await fetch(apiBase + '/kudos')
-  const data = await res.json()
-  const feed = document.getElementById('feed')
-  feed.innerHTML = ''
-  data.forEach(k => {
-    const el = document.createElement('div')
-    el.className='card'
-    el.innerHTML = `<strong>${k.sender_name}</strong> → <strong>${k.recipient_name}</strong><div>${k.message}</div><small>${k.created_at}</small>`
-    feed.appendChild(el)
-  })
-}
-
-document.getElementById('kudosForm').addEventListener('submit', async (e)=>{
-  e.preventDefault()
-  const payload = {
-    sender_email: document.getElementById('sender').value,
-    recipient_email: document.getElementById('recipient').value,
-    message: document.getElementById('message').value
-  }
-  const res = await fetch(apiBase + '/kudos', {method:'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)})
-  if(res.status===201){
-    document.getElementById('message').value=''
-    loadFeed()
-  } else {
-    const err = await res.json()
-    alert(err.error || 'Failed')
-  }
-})
-
-loadFeed()
-</script>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kudos React</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>

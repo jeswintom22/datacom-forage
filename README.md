@@ -35,6 +35,39 @@ python apps/api/app.py
 
 Open `apps/web/index.html` directly (it calls the local API at `http://127.0.0.1:5000`).
 
+Migrations
+
+This project includes a minimal SQL-based migrations system under `apps/api/migrations`.
+Apply migrations with:
+
+```powershell
+python apps/api/migrate.py
+```
+
+Tests
+
+Run the API tests (uses `pytest`):
+
+```powershell
+python -m pytest apps/api/tests
+```
+
+Frontend (React)
+
+The frontend is now a minimal Vite + React app in `apps/web`.
+Install dependencies and run the dev server:
+
+```powershell
+cd apps/web
+npm install
+npm run dev
+```
+
+Notes
+
+- For moderation/admin endpoints use the API login to obtain a JWT. Call `POST /api/auth/login` with `{"email":"bob@example.com"}` and use the returned `access_token` in the `Authorization: Bearer <token>` header.
+- For local testing the JWT secret is `dev-jwt-secret`. Replace it in production.
+
 Admin moderation (MVP): use the header `X-Admin-Key: admin-secret` for `/api/admin/...` endpoints.
 
 Notes on repository hygiene
