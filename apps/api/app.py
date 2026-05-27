@@ -6,6 +6,9 @@ import os
 from flask_jwt_extended import (
     JWTManager, create_access_token, jwt_required, get_jwt
 )
+from authlib.integrations.flask_client import OAuth
+from urllib.parse import urljoin
+import functools
 
 DB_PATH = os.environ.get('KUDOS_DB_PATH', "d:/projects/Forage/Datacom/apps/api/kudos.db")
 
@@ -13,6 +16,19 @@ app = Flask(__name__)
 # Use environment-provided JWT secret for production; fall back to dev key
 app.config['JWT_SECRET_KEY'] = os.environ.get('KUDOS_JWT_SECRET', 'dev-jwt-secret-please-change-this-to-a-long-secret')
 jwt = JWTManager(app)
+
+# OAuth / OIDC setup (optional). Requires these env vars for real SSO:
+# OIDC_CLIENT_ID, OIDC_CLIENT_SECRET, OIDC_METADATA_URL, OIDC_REDIRECT_URI
+oauth = OAuth(app)
+oidc = None
+if os.environ.get('OIDC_METADATA_URL'):
+    oidc = oauth.register(
+        name='oidc',
+        client_id=os.environ.get('OIDC_CLIENT_ID'),
+        client_secret=os.environ.get('OIDC_CLIENT_SECRET'),
+        server_metadata_url=os.environ.get('OIDC_METADATA_URL'),
+        client_kwargs={'scope': 'openid email profile'}
+    )
 
 # Configure token locations and expirations if desired (defaults are fine for MVP)
 
@@ -90,6 +106,9 @@ def find_user_by_email(email):
 
 @app.route('/api/auth/login', methods=['POST'])
 def login():
+    # If OIDC is configured, do not allow email-only login unless DEV_LOGIN_ALLOW=1
+    if oidc and os.environ.get('DEV_LOGIN_ALLOW') != '1':
+        return jsonify({'error': 'interactive OIDC required'}), 403
     payload = request.get_json() or {}
     email = payload.get('email')
     if not email:
@@ -111,6 +130,33 @@ def refresh_token():
     identity = claims.get('sub') or claims.get('sub')
     new_access = create_access_token(identity=identity, additional_claims={'role': claims.get('role')})
     return jsonify({'access_token': new_access})
+
+
+@app.route('/api/auth/oidc/login')
+def oidc_login():
+    if not oidc:
+        return jsonify({'error':'OIDC not configured'}), 400
+    redirect_uri = os.environ.get('OIDC_REDIRECT_URI') or urljoin(request.host_url, '/api/auth/oidc/callback')
+    return oidc.authorize_redirect(redirect_uri)
+
+
+@app.route('/api/auth/oidc/callback')
+def oidc_callback():
+    if not oidc:
+        return jsonify({'error':'OIDC not configured'}), 400
+    token = oidc.authorize_access_token()
+    userinfo = oidc.parse_id_token(token)
+    email = userinfo.get('email')
+    if not email:
+        return jsonify({'error':'email not provided by provider'}), 400
+    user = find_user_by_email(email)
+    if not user:
+        # Optionally auto-provision users — for MVP we reject
+        return jsonify({'error':'user not found'}), 404
+    additional_claims = {'role': user['role']}
+    access = create_access_token(identity=str(user['id']), additional_claims=additional_claims)
+    # For a browser-based flow we'd redirect with token; MVP returns JSON
+    return jsonify({'access_token': access, 'user': {'id': user['id'], 'display_name': user['display_name'], 'email': user['email'], 'role': user['role']}})
 
 @app.route('/api/kudos', methods=['GET'])
 def get_kudos():

@@ -69,10 +69,26 @@ Notes
 - For local testing the JWT secret is `dev-jwt-secret`. Replace it in production.
  - For moderation/admin endpoints use the API login to obtain a JWT. Call `POST /api/auth/login` with `{"email":"bob@example.com"}` and use the returned `access_token` in the `Authorization: Bearer <token>` header.
  - Secrets: set a strong secret in the environment variable `KUDOS_JWT_SECRET` before running the API in production. Example (PowerShell):
+ - Secrets: set a strong secret in the environment variable `KUDOS_JWT_SECRET` before running the API in production. Example (PowerShell):
 
 ```powershell
 $env:KUDOS_JWT_SECRET = 'REPLACE_WITH_A_LONG_RANDOM_SECRET'
 ```
+
+OIDC / SSO
+
+This MVP supports optional OIDC-based SSO via the `authlib` client. To enable, set these environment variables:
+
+- `OIDC_METADATA_URL` — provider metadata URL (e.g., `https://login.example.com/.well-known/openid-configuration`)
+- `OIDC_CLIENT_ID` — client id
+- `OIDC_CLIENT_SECRET` — client secret
+- `OIDC_REDIRECT_URI` — optional redirect URI; defaults to `http://localhost:5000/api/auth/oidc/callback` when running locally.
+
+When OIDC is configured the development email-login is disabled by default. To allow email login during development set `DEV_LOGIN_ALLOW=1`.
+
+Quick local testing (no real OIDC):
+
+If you don't have an OIDC provider but want to test the SSO gate, keep `DEV_LOGIN_ALLOW=1` in your env. This allows the legacy email-login for local development only. Do NOT enable this in production.
 
 Repository cleanup: if there are SQLite DB files committed (e.g., `apps/api/kudos.db`), remove them from the repository history and keep only SQL migration scripts. To remove tracked DB files now:
 
