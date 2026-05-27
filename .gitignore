@@ -14,3 +14,9 @@ __pycache__/
 .pytest_cache/
 
 *.log
+
+# Legacy files from the starter workspace
+/customers.csv
+/transactions.csv
+/process_data.py
+/error.log
