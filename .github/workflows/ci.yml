@@ -36,6 +36,6 @@ jobs:
       - name: Install and build frontend
         working-directory: apps/web
         run: |
-          npm ci
+          npm install
           npm run build
 *** End Patch

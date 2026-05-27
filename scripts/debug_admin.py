@@ -3,9 +3,7 @@ import sys
 sys.path.append(os.getcwd())
 os.environ['KUDOS_DB_PATH'] = 'd:/projects/Forage/Datacom/apps/api/kudos_test_debug.db'
 from apps.api import app, init_db
-import werkzeug
-if not hasattr(werkzeug, '__version__'):
-    werkzeug.__version__ = '3.1.8'
+# debug script; relies on pinned Werkzeug in requirements
 with app.app_context():
     init_db()
 

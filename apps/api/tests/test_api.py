@@ -2,10 +2,7 @@ import os
 import tempfile
 import pytest
 import sqlite3
-import werkzeug
-
-if not hasattr(werkzeug, '__version__'):
-    werkzeug.__version__ = '3.1.8'
+# Tests assume compatible Werkzeug; requirements pin Werkzeug for Flask compatibility
 
 
 @pytest.fixture
