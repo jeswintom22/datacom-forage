@@ -4,6 +4,10 @@
 
 Build an internal web feature that lets employees give kudos to colleagues. A user can choose a colleague, write a short appreciation message, submit it, and see recent kudos in a public dashboard feed. The system must also support administrator moderation so inappropriate, spammy, or duplicate kudos can be hidden or deleted.
 
+## Repository
+
+- Public Git repository: [https://github.com/jeswintom22/datacom-forage.git](https://github.com/jeswintom22/datacom-forage.git)
+
 ## Functional Requirements
 
 ### User Stories
