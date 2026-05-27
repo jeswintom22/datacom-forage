@@ -30,6 +30,9 @@ __pycache__/
 *.dll
 *.class
 
+# SQLite DB files
+*.db
+apps/api/*.db
 # Editor and OS folders
 .vscode/
 .idea/

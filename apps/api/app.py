@@ -10,8 +10,11 @@ from flask_jwt_extended import (
 DB_PATH = os.environ.get('KUDOS_DB_PATH', "d:/projects/Forage/Datacom/apps/api/kudos.db")
 
 app = Flask(__name__)
-app.config['JWT_SECRET_KEY'] = 'dev-jwt-secret'
+# Use environment-provided JWT secret for production; fall back to dev key
+app.config['JWT_SECRET_KEY'] = os.environ.get('KUDOS_JWT_SECRET', 'dev-jwt-secret-please-change-this-to-a-long-secret')
 jwt = JWTManager(app)
+
+# Configure token locations and expirations if desired (defaults are fine for MVP)
 
 def get_db():
     db = getattr(g, '_database', None)
@@ -95,8 +98,19 @@ def login():
     if not user:
         return jsonify({'error': 'user not found'}), 404
     additional_claims = {'role': user['role']}
-    token = create_access_token(identity=str(user['id']), additional_claims=additional_claims)
-    return jsonify({'access_token': token, 'user': {'id': user['id'], 'display_name': user['display_name'], 'email': user['email'], 'role': user['role']}})
+    access = create_access_token(identity=str(user['id']), additional_claims=additional_claims)
+    refresh = create_access_token(identity=str(user['id']), additional_claims=additional_claims)
+    return jsonify({'access_token': access, 'refresh_token': refresh, 'user': {'id': user['id'], 'display_name': user['display_name'], 'email': user['email'], 'role': user['role']}})
+
+
+@app.route('/api/auth/refresh', methods=['POST'])
+@jwt_required()
+def refresh_token():
+    # In a real app use separate refresh tokens and `@jwt_required(refresh=True)`
+    claims = get_jwt()
+    identity = claims.get('sub') or claims.get('sub')
+    new_access = create_access_token(identity=identity, additional_claims={'role': claims.get('role')})
+    return jsonify({'access_token': new_access})
 
 @app.route('/api/kudos', methods=['GET'])
 def get_kudos():

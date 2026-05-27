@@ -67,6 +67,25 @@ Notes
 
 - For moderation/admin endpoints use the API login to obtain a JWT. Call `POST /api/auth/login` with `{"email":"bob@example.com"}` and use the returned `access_token` in the `Authorization: Bearer <token>` header.
 - For local testing the JWT secret is `dev-jwt-secret`. Replace it in production.
+ - For moderation/admin endpoints use the API login to obtain a JWT. Call `POST /api/auth/login` with `{"email":"bob@example.com"}` and use the returned `access_token` in the `Authorization: Bearer <token>` header.
+ - Secrets: set a strong secret in the environment variable `KUDOS_JWT_SECRET` before running the API in production. Example (PowerShell):
+
+```powershell
+$env:KUDOS_JWT_SECRET = 'REPLACE_WITH_A_LONG_RANDOM_SECRET'
+```
+
+Repository cleanup: if there are SQLite DB files committed (e.g., `apps/api/kudos.db`), remove them from the repository history and keep only SQL migration scripts. To remove tracked DB files now:
+
+```powershell
+git rm --cached apps/api/kudos.db || true
+git rm --cached apps/api/kudos_test_debug.db || true
+git commit -m "Remove DB artifacts from repo" || true
+git push
+```
+
+Continuous Integration
+
+A minimal GitHub Actions workflow is included to run tests and build the frontend. The workflow file is at `.github/workflows/ci.yml`.
 
 Admin moderation (MVP): use the header `X-Admin-Key: admin-secret` for `/api/admin/...` endpoints.
 
