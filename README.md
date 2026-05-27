@@ -103,6 +103,29 @@ Continuous Integration
 
 A minimal GitHub Actions workflow is included to run tests and build the frontend. The workflow file is at `.github/workflows/ci.yml`.
 
+Docker & Deployment
+
+This project includes Dockerfiles for the API and frontend and a `docker-compose.yml` for local runs.
+
+To run locally with Docker Compose:
+
+```bash
+docker compose up --build
+```
+
+Images are built in CI and pushed to GitHub Container Registry (`ghcr.io/<owner>/<repo>/kudos-api` and `kudos-web`). The CI workflow builds images and runs tests (see `.github/workflows/ci.yml`).
+
+Playwright E2E
+
+The frontend includes a Playwright test scaffold. Run locally:
+
+```bash
+cd apps/web
+npm install
+npx playwright install
+npm run test:e2e
+```
+
 Admin moderation (MVP): use the header `X-Admin-Key: admin-secret` for `/api/admin/...` endpoints.
 
 Notes on repository hygiene
