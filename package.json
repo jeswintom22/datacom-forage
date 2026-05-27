@@ -1,0 +1,14 @@
+{
+  "name": "kudos-system",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "lint": "echo \"No lint configured yet\"",
+    "test": "echo \"No tests configured yet\"",
+    "dev": "echo \"No app configured yet\""
+  }
+}
